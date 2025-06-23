@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raise or Fold HTML Generator</title>
+
+  <style>
+    
+  </style>
+
+  
+</head>
+<body>
+  <h1>Raise or Fold HTML Generator</h1>
+<h3>What theme is being used for the buglog?</h3>
+<input type="radio" id="zeaqueTheme" name="chatTheme" value="zeaqueTheme" />  
+<label for="zeaqueTheme">Zeaque</label><br />
+<input type="radio" id="vesstaTheme" name="chatTheme" value="vesstaTheme" />  
+<label for="vesstaTheme">Vessta</label><br />
+<input type="radio" id="phenixTheme" name="chatTheme" value="phenixTheme" />  
+<label for="phenixTheme">Phenix (WIP)</label><br />
+<input type="radio" id="markorTheme" name="chatTheme" value="markorTheme" />  
+<label for="markorTheme">Markor (WIP)</label>
+
+<h3>Who is being messaged (Used for username and pfp)</h3>
+
+<input type="radio" id="zeaqueProfile" name="chatProfile" value="Zeaque" />  
+<label for="zeaqueProfile">Zeaque</label><br />
+
+<input type="radio" id="vesstaProfile" name="chatProfile" value="Vessta" />  
+<label for="vesstaProfile">Vessta</label><br />
+
+<input type="radio" id="phenixProfile" name="chatProfile" value="Phenix" />  
+<label for="phenixProfile">Phenix</label><br />
+
+<input type="radio" id="markorProfile" name="chatProfile" value="Markor" />  
+<label for="otherProfile">Markor</label><br />
+
+<input type="radio" id="otherProfile" name="chatProfile" value="otherProfile" />
+<label for="otherProfile"><div style="display: inline-block; background-color: #eeeeee; vertical-align: text-top;">
+  Other:<br />
+  <label for="otherProfileImage">Link to Profile Image:</label><br />
+  <input type="text" id="otherProfileImage" name="otherProfileImage" /><br />
+  <label for="otherUsername">Username:</label><br />
+  <input type="text" id="otherUsername" name="otherUsername" /> </div></label
+><br /><br />
+<h3>Current Status Message?</h3>
+<input type="text" id="statusMessage" name="statusMessage" /><br />
+
+<h2>Input Dialogue</h2>
+<textarea
+  id="dialogueInput"
+  name="dialogueInput"
+  rows="10"
+  cols="100"
+></textarea>
+<br />
+
+<button id="parseBtn">Parse into HTML</button>
+
+<h2 style="margin-top:1.5rem;">
+  Output HTML
+</h2>
+<textarea
+  id="dialogueOutput"
+  rows="10"
+  cols="100"
+  readonly
+  placeholder="Copy and Paste this into MSPFA"
+></textarea>
+
+
+  <script>
+    const prefixToClass = {
+  GA: "Vessta",
+  UG: "Markor",
+  TA: "Phenix",
+  GG: "Zeaque",
+}
+const characterToUsername = {
+  Vessta: "giddyAbsurdism [GA]",
+  Markor: "udderlyGenial [UG]",
+  Phenix: "terminalAeviternity [TA]",
+  Zeaque: "gallantGrouser [GG]",
+}
+const formatingLogs = {
+"giddyAbsurdism [GA]": `<span class="Vessta">giddyAbsurdism [GA]</span>`,
+"udderlyGenial [UG]": `<span class="Markor">udderlyGenial [UG]</span>`,
+"terminalAeviternity [TA]": `<span class="Phenix">terminalAeviternity [TA]</span>`,
+"gallantGrouser [GG]": `<span class="Zeaque">gallantGrouser [GG]</span>`,
+}
+
+
+function parseDialogueToHTML(rawText) {
+  const selectedTheme = document.querySelector('input[name="chatTheme"]:checked');
+  if (!selectedTheme) {
+  alert("Please select a theme first.");
+  return "";
+}
+  let selectedPFP =  null
+  let selectedTroll = null
+  let selectedUsername = null
+  const messenger = document.querySelector('input[name="chatProfile"]:checked');
+  if (!messenger) {
+  alert("Please select who is being messaged.");
+  return "";
+  }
+  if (messenger.value == "otherProfile") {
+  selectedPFP = document.getElementById("otherProfileImage").value
+  selectedTroll = document.getElementById("otherUsername").value
+  selectedUsername = "default"
+  }
+  if (messenger.value != "otherProfile") {
+  selectedPFP =  `https://file.garden/Z49oqnj5okOfzefL/bugchat_PFP/${messenger.value}PFP.gif`
+  selectedTroll = messenger.value
+  selectedUsername = characterToUsername[messenger.value] || null
+  }
+  const statusMessage = document.getElementById("statusMessage").value
+  const lines = rawText
+    .split("\n")
+    .map((line) => line.trim())
+    .map((line) => {
+      const match = line.match(/^([A-Z]{2}):/)
+      let msgClass = null
+      if (match) {
+        const prefix = match[1]
+        msgClass = prefixToClass[prefix] || null
+      }
+      return { text: line, className: msgClass }
+    })
+  console.log("Parsed lines:", lines)
+  let htmlResult = ""
+  
+  if (selectedTheme.value == "zeaqueTheme") {
+htmlResult += `<div class="zeaquetheme"><input id="check01" type="checkbox" name="Buglog" /><div class="buglog"><label for="check01"><div class="bugHeader"><div class="bugPFP"><img src="${selectedPFP}"></div><div class="bugName"><span class="${selectedTroll}">${selectedUsername}</span></div><div class="togglePrompt"></div><div class="bugStatus">${statusMessage}</div></div></label><div class="bugBody">
+`
+lines.forEach((line) => {
+if(line.className){
+htmlResult += `<span class="${line.className}">${line.text}</span>
+`
+} else {
+// “find and replace” usernames here:
+    let modified = line.text;
+
+    // For each username key, replace every occurrence with its <span>…</span> HTML
+    Object.keys(formatingLogs).forEach(username => {
+      if (modified.includes(username)) {
+        const replacement = formatingLogs[username];
+        // split/join replaces all literal occurrences of “username”
+        modified = modified.split(username).join(replacement);
+      }
+    });
+
+    // Append the fully‐replaced line (with embedded <span> tags) to htmlResult
+    htmlResult += `${modified}
+    `;
+}
+})
+htmlResult += `</div></div></div>`
+console.log(htmlResult)
+}
+  if (selectedTheme.value == "vesstaTheme"){
+htmlResult += `<div class="vesstatheme"><input id="check01" type="checkbox" name="Buglog" /><div class="buglog"><label for="check01"><div class="bugHeader"><div class="bugPFP"><img src="${selectedPFP}"/></div><div class="bugName"><span class="${selectedTroll}">${selectedUsername}</span></div><div class="togglePrompt"></div><div class="bugStatus">${statusMessage}</div></div></label><div class="bugBody">
+`
+lines.forEach((line) => {
+if(line.className){
+htmlResult += `<div class="${line.className}">${line.text}</div>
+`
+} else {
+htmlResult += `<div>${line.text}</div>
+`
+}
+})
+htmlResult += `</div></div></div>`
+}
+  if (selectedTheme.value == "phenixTheme") {
+return "not finished lol"
+}
+  if (selectedTheme.value == "markorTheme") {
+return "not finished lol"
+}
+return htmlResult
+}
+
+
+
+
+document.getElementById("parseBtn").addEventListener("click", () => {
+  const raw = document.getElementById("dialogueInput").value
+  const generated = parseDialogueToHTML(raw)
+  document.getElementById("dialogueOutput").value = generated
+})
+
+  </script>
+</body>
+</html>
